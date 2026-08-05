@@ -1,0 +1,14 @@
+# The domain you configured on DuckDNS (e.g., "myicarus" for myicarus.duckdns.org)
+duckdns_domain = "YOUR_DUCKDNS_DOMAIN"
+
+# Your DuckDNS token to dynamically update the DNS record
+duckdns_token  = "YOUR_DUCKDNS_TOKEN"
+
+# Secure token used to authenticate the local FRP client to the AWS gateway
+auth_token     = "YOUR_SECRET_TOKEN_HERE"
+
+# Credentials for the FRP Web Dashboard (accessible at port 7500)
+frp_dashboard_creds = {
+  user = "admin"
+  pwd  = "YOUR_SECURE_PASSWORD"
+}

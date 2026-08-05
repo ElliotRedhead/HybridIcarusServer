@@ -1,0 +1,53 @@
+services:
+  icarus:
+    image: mornedhels/icarus-server:latest
+    container_name: icarus
+    restart: unless-stopped
+    ports:
+      - "17777:17777/udp" # Game Port
+      - "27015:27015/udp" # Steam Query Port
+    env_file:
+      - .env
+    environment:
+      - SERVER_NAME=${SERVER_NAME:-Icarus Server}
+      - SERVER_PASSWORD=${SERVER_PASSWORD}
+      - SERVER_MAX_PLAYERS=${SERVER_MAX_PLAYERS:-8}
+      - BRANCH=${BRANCH:-public}
+      - STEAMCMD_USER=${STEAMCMD_USER:-}
+      - STEAMCMD_PASS=${STEAMCMD_PASS:-}
+    volumes:
+      - ./data:/home/steam/server-files
+    stop_grace_period: 2m # Allow time for graceful shutdown and save
+
+  frpc:
+    image: snowdreamtech/frpc
+    container_name: frpc
+    restart: unless-stopped
+    network_mode: "host" # Needs host network to accurately route UDP and avoid NAT complications
+    volumes:
+      - ./frpc.toml:/etc/frp/frpc.toml:ro
+    depends_on:
+      - icarus
+
+  backup:
+    image: alpine:latest
+    container_name: icarus-backup
+    restart: unless-stopped
+    environment:
+      - RESTIC_PASSWORD=${RESTIC_PASSWORD}
+      - RESTIC_REPOSITORY=/backups
+    volumes:
+      - ./data:/data:ro
+      - ./backups:/backups
+    command: >
+      /bin/sh -c "
+      apk add --no-cache restic &&
+      restic init || true &&
+      while true; do
+        echo 'Starting backup...'
+        restic backup /data --cleanup-cache
+        restic forget --keep-daily 7 --keep-weekly 4 --prune
+        echo 'Backup finished. Sleeping for 4 hours...'
+        sleep 14400
+      done
+      "
