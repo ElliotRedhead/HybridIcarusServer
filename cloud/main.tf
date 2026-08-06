@@ -23,7 +23,7 @@ resource "aws_lightsail_instance" "vpn_proxy" {
   name              = "icarus-vpn-proxy"
   availability_zone = "eu-west-2b"
   blueprint_id      = "ubuntu_22_04"
-  bundle_id         = "nano_2_0" # 512MB RAM instance
+  bundle_id         = "nano_3_0" # 512MB RAM instance
   key_pair_name     = aws_lightsail_key_pair.vpn_key_pair.name
 }
 
@@ -98,9 +98,9 @@ resource "null_resource" "server_setup" {
       <<-EOF
       sudo tee "/usr/local/bin/healthcheck.sh" << "HEALTHCHECK"
       #!/bin/bash
-      FRP_RES=$$(curl -s -u "${var.frp_dashboard_creds.user}:${var.frp_dashboard_creds.pwd}" "http://127.0.0.1:7501/api/proxy/udp/icarus-game")
+      FRP_RES=$(curl -s -u "${var.frp_dashboard_creds.user}:${var.frp_dashboard_creds.pwd}" "http://127.0.0.1:7501/api/proxy/udp/icarus-game")
 
-      if echo "$$FRP_RES" | grep -q "\"status\":\"online\""; then
+      if echo "$FRP_RES" | grep -q "\"status\":\"online\""; then
           TUNNEL="online"
           HOST="online"
       else
@@ -112,7 +112,7 @@ resource "null_resource" "server_setup" {
           fi
       fi
 
-      echo "{\"host\": \"$$HOST\", \"tunnel\": \"$$TUNNEL\"}" > "/opt/icarus-status/health.json"
+      echo "{\"host\": \"$HOST\", \"tunnel\": \"$TUNNEL\"}" > "/opt/icarus-status/health.json"
       chmod 644 "/opt/icarus-status/health.json"
       HEALTHCHECK
       EOF

@@ -7,7 +7,7 @@ ${duckdns_domain}.duckdns.org {
 
     # Serve the status web page
     handle /* {
-        root * /opt/icarus-status
+        root * /usr/share/caddy
         file_server
     }
 }
