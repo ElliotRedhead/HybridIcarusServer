@@ -11,19 +11,35 @@ services:
     environment:
       - SERVER_NAME=${SERVER_NAME:-Icarus Server}
       - SERVER_PASSWORD=${SERVER_PASSWORD}
+      - SERVER_ADMIN_PASSWORD=${SERVER_ADMIN_PASSWORD}
       - SERVER_MAX_PLAYERS=${SERVER_MAX_PLAYERS:-8}
-      - BRANCH=${BRANCH:-public}
-      - STEAMCMD_USER=${STEAMCMD_USER:-}
-      - STEAMCMD_PASS=${STEAMCMD_PASS:-}
+      - SERVER_PORT=${SERVER_PORT:-17777}
+      - SERVER_QUERYPORT=${SERVER_QUERYPORT:-27015}
+      - SERVER_SHUTDOWN_IF_NOT_JOINED=${SERVER_SHUTDOWN_IF_NOT_JOINED:-300.000000}
+      - SERVER_SHUTDOWN_IF_EMPTY=${SERVER_SHUTDOWN_IF_EMPTY:-60.000000}
+      - SERVER_ALLOW_NON_ADMINS_LAUNCH=${SERVER_ALLOW_NON_ADMINS_LAUNCH:-True}
+      - SERVER_ALLOW_NON_ADMINS_DELETE=${SERVER_ALLOW_NON_ADMINS_DELETE:-False}
+      - SERVER_RESUME_PROSPECT=${SERVER_RESUME_PROSPECT:-True}
+      - GAME_BRANCH=${GAME_BRANCH:-public}
+      - ASYNC_TASK_TIMEOUT=${ASYNC_TASK_TIMEOUT:-60}
+      - UPDATE_CRON=${UPDATE_CRON}
+      - UPDATE_SKIP=${UPDATE_SKIP:-false}
+      - CLEANUP_CRON=${CLEANUP_CRON}
+      - CLEANUP_DAYS=${CLEANUP_DAYS:-1}
+      - CLEANUP_DELETE_BACKUPS=${CLEANUP_DELETE_BACKUPS:-false}
+      - CLEANUP_PRUNE_FOLDER=${CLEANUP_PRUNE_FOLDER:-pruned}
+      - CLEANUP_EXCLUDES=${CLEANUP_EXCLUDES}
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
     volumes:
-      - ./data:/home/steam/server-files
+      - ./data:/home/icarus/drive_c/icarus
+      - ./game:/opt/icarus
     stop_grace_period: 2m # Allow time for graceful shutdown and save
 
   frpc:
     image: snowdreamtech/frpc
     container_name: frpc
     restart: unless-stopped
-    network_mode: "host" # Needs host network to accurately route UDP and avoid NAT complications
     volumes:
       - ./frpc.toml:/etc/frp/frpc.toml:ro
     depends_on:
