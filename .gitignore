@@ -12,6 +12,7 @@ cloud/*.pem
 
 # Icarus server data
 local/data/
+/local/game/
 local/backups/
 local/manual-backups/
 local/instances/
