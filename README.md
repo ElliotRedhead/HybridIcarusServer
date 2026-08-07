@@ -31,11 +31,11 @@ If you have been playing locally with friends and want to move your progress to 
 3. Open the folder named after your SteamID64, then open the `Prospects` folder. Locate the `.json` file of the world you want to transfer.
 4. Copy this `.json` file to the equivalent folder on your server machine: 
    `local/data/Saved/PlayerData/DedicatedServer/Prospects/` (create the folders if they don't exist).
-5. In your `local/data/Saved/Config/WindowsServer/ServerSettings.ini` file, set the following options to match your save name (without the `.json` extension):
-   ```ini
-   LoadProspect=YourSaveFileName
-   ResumeProspect=True
+5. Start the server again using `make local-up`.
+6. Load the prospect into the running server using the following command (replace with your save name):
+   ```bash
+   make load-prospect PROSPECT=YourSaveFileName
    ```
-6. Start the server again using `make local-up`. Your friends will now connect to the shared world!
+   *(Note: The server image wipes `LoadProspect` on boot, so you must use this command to inject it while running. Since `ResumeProspect=True` is set by default, the server will remember it for future restarts!)*
 
 *Note: Character progression (level, talents, unlocks) is stored locally on each player's PC. This means your progression stays with you seamlessly when moving between local play and the dedicated server!*

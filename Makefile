@@ -40,9 +40,13 @@ local-logs: ## View logs for the Icarus server
 frpc-logs: ## View logs for the local FRP client
 	cd local && docker compose logs -f frpc
 
-.PHONY: backup-logs
 backup-logs: ## View logs for the backup container
 	cd local && docker compose logs -f backup
+
+.PHONY: load-prospect
+load-prospect: ## Load a prospect by name (e.g., make load-prospect PROSPECT=YourSaveFileName)
+	@if [ -z "$(PROSPECT)" ]; then echo "Error: PROSPECT is not set. Usage: make load-prospect PROSPECT=YourSaveFileName"; exit 1; fi
+	cd local && docker compose exec icarus /usr/local/etc/icarus/icarus-commands loadProspect $(PROSPECT)
 
 # --- Utilities ---
 
