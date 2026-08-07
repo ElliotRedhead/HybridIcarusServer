@@ -2,6 +2,7 @@ services:
   icarus:
     image: mornedhels/icarus-server:latest
     container_name: icarus
+    mem_limit: 9g
     restart: unless-stopped
     ports:
       - "17777:17777/udp" # Game Port
