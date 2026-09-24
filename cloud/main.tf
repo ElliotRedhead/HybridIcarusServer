@@ -117,8 +117,8 @@ resource "null_resource" "server_setup" {
       "sudo docker run -d --name frps --restart always --network host -v '/etc/frp/frps.toml:/etc/frp/frps.toml' snowdreamtech/frps:0.70.1-debian",
       "sleep 3",
 
-      "sudo docker run -d --name duckdns --restart always --network host -e SUBDOMAINS='${var.duckdns_domain}' -e TOKEN='${var.duckdns_token}' lscr.io/linuxserver/duckdns:latest",
-      "sleep 3",
+      # Point DuckDNS at the static IP (it never changes, so a one-off update is enough)
+      "curl -fsS 'https://www.duckdns.org/update?domains=${var.duckdns_domain}&token=${var.duckdns_token}&ip=${aws_lightsail_static_ip.gateway_static_ip.ip_address}' | grep -q OK",
 
       # Setup Healthcheck Script
       <<-EOF
