@@ -5,7 +5,6 @@ cloud/terraform.tfvars
 
 # Terraform state and generated files
 cloud/.terraform/
-cloud/.terraform.lock.hcl
 cloud/terraform.tfstate
 cloud/terraform.tfstate.backup
 cloud/*.pem
