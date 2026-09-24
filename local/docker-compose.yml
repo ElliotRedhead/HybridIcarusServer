@@ -59,9 +59,13 @@ services:
     image: nginx:alpine
     container_name: icarus-version
     restart: unless-stopped
+    # Serves only the game's current_version file (mounting the directory avoids a
+    # broken file mount on a fresh clone, before the file exists)
     volumes:
-      - ./game/current_version:/usr/share/nginx/html/index.html:ro
-
+      - ./game:/srv/game:ro
+    configs:
+      - source: version-nginx
+        target: /etc/nginx/conf.d/default.conf
 
   backup:
     image: alpine:latest
@@ -85,3 +89,16 @@ services:
         sleep 14400
       done
       "
+
+configs:
+  version-nginx:
+    content: |
+      server {
+        listen 80;
+        location = / {
+          default_type text/plain;
+          root /srv/game;
+          try_files /current_version =404;
+        }
+        location / { return 404; }
+      }

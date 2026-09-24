@@ -150,7 +150,7 @@ exit(1)'; then
           SERVER="offline"
       fi
 
-      VERSION=$(curl -s --max-time 2 http://127.0.0.1:7502 || echo "Unknown")
+      VERSION=$(curl -sf --max-time 2 http://127.0.0.1:7502 || echo "Unknown")
       if [ -z "$VERSION" ]; then VERSION="Unknown"; fi
 
       echo "{\"gateway\": \"$GATEWAY\", \"server\": \"$SERVER\", \"version\": \"$VERSION\"}" > "/opt/icarus-status/health.json"
