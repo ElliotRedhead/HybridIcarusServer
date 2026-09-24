@@ -26,39 +26,39 @@ provider "aws" {
   profile = var.aws_profile
 }
 
-resource "tls_private_key" "vpn_key" {
+resource "tls_private_key" "gateway_key" {
   algorithm = "RSA"
   rsa_bits  = 2048
 }
 
-resource "aws_lightsail_key_pair" "vpn_key_pair" {
-  name       = "icarus-vpn-key"
-  public_key = tls_private_key.vpn_key.public_key_openssh
+resource "aws_lightsail_key_pair" "gateway_key_pair" {
+  name       = "icarus-gateway-key"
+  public_key = tls_private_key.gateway_key.public_key_openssh
 }
 
 resource "local_file" "ssh_key" {
-  content         = tls_private_key.vpn_key.private_key_pem
+  content         = tls_private_key.gateway_key.private_key_pem
   filename        = "${path.module}/id_rsa.pem"
   file_permission = "0600"
 }
 
-resource "aws_lightsail_instance" "vpn_proxy" {
-  name              = "icarus-vpn-proxy"
+resource "aws_lightsail_instance" "gateway" {
+  name              = "icarus-gateway"
   availability_zone = var.availability_zone
   blueprint_id      = "ubuntu_22_04"
   bundle_id         = "nano_3_0" # 512MB RAM instance
-  key_pair_name     = aws_lightsail_key_pair.vpn_key_pair.name
+  key_pair_name     = aws_lightsail_key_pair.gateway_key_pair.name
 }
 
 resource "null_resource" "server_setup" {
   depends_on = [
-    aws_lightsail_instance.vpn_proxy,
+    aws_lightsail_instance.gateway,
     aws_lightsail_static_ip_attachment.attach,
     aws_lightsail_instance_public_ports.firewall
   ]
 
   triggers = {
-    instance_id = aws_lightsail_instance.vpn_proxy.id
+    instance_id = aws_lightsail_instance.gateway.id
     index_hash  = filemd5("${path.module}/index.html.tpl")
     caddy_hash  = filemd5("${path.module}/Caddyfile.tpl")
     config_hash = nonsensitive(sha256(jsonencode([var.auth_token, var.frp_dashboard_creds, var.duckdns_domain, var.duckdns_token])))
@@ -67,8 +67,8 @@ resource "null_resource" "server_setup" {
   connection {
     type        = "ssh"
     user        = "ubuntu"
-    host        = aws_lightsail_static_ip.vpn_static_ip.ip_address
-    private_key = tls_private_key.vpn_key.private_key_pem
+    host        = aws_lightsail_static_ip.gateway_static_ip.ip_address
+    private_key = tls_private_key.gateway_key.private_key_pem
     timeout     = "5m"
   }
 
@@ -167,23 +167,23 @@ HEALTHCHECK
   }
 }
 
-resource "aws_lightsail_static_ip" "vpn_static_ip" {
+resource "aws_lightsail_static_ip" "gateway_static_ip" {
   name = "icarus-static-ip"
 }
 
 resource "aws_lightsail_static_ip_attachment" "attach" {
-  static_ip_name = aws_lightsail_static_ip.vpn_static_ip.name
-  instance_name  = aws_lightsail_instance.vpn_proxy.name
+  static_ip_name = aws_lightsail_static_ip.gateway_static_ip.name
+  instance_name  = aws_lightsail_instance.gateway.name
 
   lifecycle {
     replace_triggered_by = [
-      aws_lightsail_instance.vpn_proxy
+      aws_lightsail_instance.gateway
     ]
   }
 }
 
 resource "aws_lightsail_instance_public_ports" "firewall" {
-  instance_name = aws_lightsail_instance.vpn_proxy.name
+  instance_name = aws_lightsail_instance.gateway.name
 
   depends_on = [aws_lightsail_static_ip_attachment.attach]
 
@@ -231,7 +231,7 @@ resource "aws_lightsail_instance_public_ports" "firewall" {
 }
 
 output "public_ip" {
-  value = aws_lightsail_static_ip.vpn_static_ip.ip_address
+  value = aws_lightsail_static_ip.gateway_static_ip.ip_address
 }
 
 variable "aws_region" {
@@ -277,7 +277,7 @@ variable "frp_dashboard_creds" {
 
 resource "local_file" "home_config" {
   content = <<-EOF
-  serverAddr = "${aws_lightsail_static_ip.vpn_static_ip.ip_address}"
+  serverAddr = "${aws_lightsail_static_ip.gateway_static_ip.ip_address}"
   serverPort = 7000
   auth.method = "token"
   auth.token = "${var.auth_token}"
