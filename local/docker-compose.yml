@@ -32,10 +32,16 @@ services:
       - CLEANUP_EXCLUDES=${CLEANUP_EXCLUDES}
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
+      - UPDATE_PRE_HOOK=sh -c 'grep -q "\"StateFlags\".*\"6\"" /opt/icarus/server/steamapps/appmanifest_2089300.acf 2>/dev/null && rm -f /opt/icarus/server/steamapps/appmanifest_2089300.acf || true'
     volumes:
       - ./data:/home/icarus/drive_c/icarus
       - ./game:/opt/icarus
     stop_grace_period: 2m # Allow time for graceful shutdown and save
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
 
   frpc:
     image: snowdreamtech/frpc
@@ -45,6 +51,17 @@ services:
       - ./frpc.toml:/etc/frp/frpc.toml:ro
     depends_on:
       - icarus
+      - version-server
+    entrypoint: /bin/sh
+    command: -c "while ! ping -c 1 -W 1 8.8.8.8 > /dev/null 2>&1; do echo 'Waiting for internet...'; sleep 2; done; /usr/bin/frpc -c /etc/frp/frpc.toml"
+
+  version-server:
+    image: nginx:alpine
+    container_name: icarus-version
+    restart: unless-stopped
+    volumes:
+      - ./game/current_version:/usr/share/nginx/html/index.html:ro
+
 
   backup:
     image: alpine:latest

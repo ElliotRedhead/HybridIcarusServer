@@ -26,27 +26,38 @@
       <h2>Game Server</h2>
       <span id="server-status">Loading...</span>
     </div>
+    <div class="status-item">
+      <h2>Server Version</h2>
+      <span id="server-version">Loading...</span>
+    </div>
   </div>
   
   <div class="instructions">
     <h3>How to Connect:</h3>
-    <p>1. Open Icarus and click <strong>Play</strong>.</p>
-    <p>2. Select <strong>Dedicated Servers</strong>.</p>
-    <p>3. Click <strong>Direct Connect</strong>.</p>
-    <p>4. Enter Address: <strong>${duckdns_domain}.duckdns.org:17777</strong></p>
+    <p>1. Open Steam and go to <strong>View</strong> > <strong>Game Servers</strong>.</p>
+    <p>2. Go to the <strong>Favorites</strong> tab and click <strong>+</strong> (Add a Server).</p>
+    <p>3. Enter Address: <strong>${duckdns_domain}.duckdns.org:27015</strong> and save.</p>
+    <p>4. Open Icarus and click <strong>Play</strong>.</p>
+    <p>5. Select <strong>Dedicated Servers</strong>.</p>
+    <p>6. Select the server from your <strong>Favorites</strong> list and join!</p>
   </div>
 
   <script>
     async function checkStatus() {
       try {
-        let hostOnline = false;
-        let tunnelOnline = false;
+        let gatewayOnline = false;
+        let gameServerOnline = false;
+        let serverVersion = "Unknown";
         
         try {
-          const healthRes = await fetch("/health.json");
+          // Append timestamp to prevent browser caching of the status
+          const healthRes = await fetch(`/health.json?t=$${Date.now()}`);
           const healthData = await healthRes.json();
-          hostOnline = healthData.host === "online";
-          tunnelOnline = healthData.tunnel === "online";
+          gatewayOnline = healthData.gateway === "online";
+          gameServerOnline = healthData.server === "online";
+          if (healthData.version) {
+            serverVersion = healthData.version;
+          }
         } catch (err) {
           console.warn("Could not fetch health.json");
         }
@@ -62,8 +73,16 @@
           }
         };
 
-        setStatus("tunnel-status", hostOnline);
-        setStatus("server-status", tunnelOnline);
+        setStatus("tunnel-status", gatewayOnline);
+        setStatus("server-status", gameServerOnline);
+
+        const versionEl = document.getElementById("server-version");
+        if (serverVersion !== "Unknown") {
+          versionEl.innerHTML = `<a href="https://steamdb.info/patchnotes/$${serverVersion}/" target="_blank" style="color: #ffffff; text-decoration: underline;">$${serverVersion}</a>`;
+        } else {
+          versionEl.innerText = "Unknown";
+          versionEl.style.color = "#aaaaaa";
+        }
 
       } catch (err) {
         console.error("Status check encountered an error", err);

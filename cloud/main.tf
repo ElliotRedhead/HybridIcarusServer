@@ -36,6 +36,8 @@ resource "null_resource" "server_setup" {
 
   triggers = {
     instance_id = aws_lightsail_instance.vpn_proxy.id
+    index_hash  = filemd5("${path.module}/index.html.tpl")
+    caddy_hash  = filemd5("${path.module}/Caddyfile.tpl")
   }
 
   connection {
@@ -98,23 +100,43 @@ resource "null_resource" "server_setup" {
       <<-EOF
       sudo tee "/usr/local/bin/healthcheck.sh" << "HEALTHCHECK"
       #!/bin/bash
+      
+      # 1. Check Gateway Tunnel (FRP Connection)
       FRP_RES=$(curl -s -u "${var.frp_dashboard_creds.user}:${var.frp_dashboard_creds.pwd}" "http://127.0.0.1:7501/api/proxy/udp/icarus-game")
 
       if echo "$FRP_RES" | grep -q "\"status\":\"online\""; then
-          TUNNEL="online"
-          HOST="online"
+          GATEWAY="online"
       else
-          TUNNEL="offline"
           if ping -c 1 -W 2 "${var.duckdns_domain}.duckdns.org" >/dev/null 2>&1; then
-              HOST="online"
+              GATEWAY="online"
           else
-              HOST="offline"
+              GATEWAY="offline"
           fi
       fi
 
-      echo "{\"host\": \"$HOST\", \"tunnel\": \"$TUNNEL\"}" > "/opt/icarus-status/health.json"
+      # 2. Check Game Server (Steam Query Port 27015)
+      if python3 -c 'import socket
+try:
+    s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(2)
+    s.sendto(bytes.fromhex("FFFFFFFF54536F7572636520456E67696E6520517565727900"), ("127.0.0.1", 27015))
+    d, _ = s.recvfrom(1024)
+    if d.startswith(bytes.fromhex("FFFFFFFF")):
+        exit(0)
+except Exception:
+    pass
+exit(1)'; then
+          SERVER="online"
+      else
+          SERVER="offline"
+      fi
+
+      VERSION=$(curl -s --max-time 2 http://127.0.0.1:7502 || echo "Unknown")
+      if [ -z "$VERSION" ]; then VERSION="Unknown"; fi
+
+      echo "{\"gateway\": \"$GATEWAY\", \"server\": \"$SERVER\", \"version\": \"$VERSION\"}" > "/opt/icarus-status/health.json"
       chmod 644 "/opt/icarus-status/health.json"
-      HEALTHCHECK
+HEALTHCHECK
       EOF
       ,
       "sudo chmod +x '/usr/local/bin/healthcheck.sh'",
@@ -225,16 +247,23 @@ resource "local_file" "home_config" {
   [[proxies]]
   name = "icarus-game"
   type = "udp"
-  localIP = "127.0.0.1"
+  localIP = "icarus"
   localPort = 17777
   remotePort = 17777
 
   [[proxies]]
   name = "icarus-query"
   type = "udp"
-  localIP = "127.0.0.1"
+  localIP = "icarus"
   localPort = 27015
   remotePort = 27015
+
+  [[proxies]]
+  name = "icarus-version"
+  type = "tcp"
+  localIP = "version-server"
+  localPort = 80
+  remotePort = 7502
   EOF
 
   filename        = "${path.module}/../local/frpc.toml"
