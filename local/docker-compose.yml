@@ -72,7 +72,7 @@ services:
     container_name: icarus-backup
     restart: unless-stopped
     environment:
-      - RESTIC_PASSWORD=${RESTIC_PASSWORD}
+      - RESTIC_PASSWORD=${RESTIC_PASSWORD:?RESTIC_PASSWORD must be set in local/.env}
       - RESTIC_REPOSITORY=/backups
     volumes:
       - ./data:/data:ro
