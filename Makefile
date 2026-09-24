@@ -52,6 +52,10 @@ frpc-logs: ## View logs for the local FRP client
 backup-logs: ## View logs for the backup container
 	cd local && docker compose logs -f backup
 
+.PHONY: status
+status: ## Query the local game server's name, players and version
+	python3 local/query_server.py
+
 .PHONY: load-prospect
 load-prospect: ## Load a prospect by name (e.g., make load-prospect PROSPECT=YourSaveFileName)
 	@if [ -z "$(PROSPECT)" ]; then echo "Error: PROSPECT is not set. Usage: make load-prospect PROSPECT=YourSaveFileName"; exit 1; fi
