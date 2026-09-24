@@ -3,6 +3,8 @@ KEY_FILE := $(TF_DIR)/id_rsa.pem
 SSH_USER := ubuntu
 GET_IP = $(shell cd $(TF_DIR) && terraform output -raw public_ip)
 
+.DEFAULT_GOAL := help
+
 # --- Cloud Targets ---
 
 .PHONY: cloud-ip
@@ -15,12 +17,12 @@ cloud-ssh: ## SSH into the Lightsail instance
 	ssh -i $(KEY_FILE) $(SSH_USER)@$(GET_IP)
 
 .PHONY: cloud-deploy
-cloud-deploy: ## Apply Terraform changes (Auto-Approve)
-	cd $(TF_DIR) && terraform init && terraform apply -auto-approve
+cloud-deploy: ## Apply Terraform changes (shows the plan and asks for confirmation)
+	cd $(TF_DIR) && terraform init && terraform apply
 
 .PHONY: cloud-destroy
-cloud-destroy: ## Destroy the cloud infrastructure
-	cd $(TF_DIR) && terraform destroy -auto-approve
+cloud-destroy: ## Destroy the cloud infrastructure (asks for confirmation)
+	cd $(TF_DIR) && terraform destroy
 
 # --- Local Server Targets ---
 
@@ -46,6 +48,7 @@ local-logs: ## View logs for the Icarus server
 frpc-logs: ## View logs for the local FRP client
 	cd local && docker compose logs -f frpc
 
+.PHONY: backup-logs
 backup-logs: ## View logs for the backup container
 	cd local && docker compose logs -f backup
 
