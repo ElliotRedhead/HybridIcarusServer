@@ -12,3 +12,9 @@ frp_dashboard_creds = {
   user = "admin"
   pwd  = "YOUR_SECURE_PASSWORD"
 }
+
+# Optional: AWS settings (defaults shown). The availability zone must be in the region.
+# aws_region        = "eu-west-2"
+# availability_zone = "eu-west-2b"
+# AWS CLI profile to use; leave unset to use your default AWS credentials
+# aws_profile       = "my-lightsail-profile"
