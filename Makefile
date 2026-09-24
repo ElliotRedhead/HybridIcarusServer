@@ -32,6 +32,12 @@ local-up: ## Start local Icarus server, Backup & Tunnel
 local-down: ## Stop local servers
 	cd local && docker compose down
 
+.PHONY: local-fix-update
+local-fix-update: ## Fix stuck SteamCMD updates (state 0x6) by resetting the appmanifest
+	@echo "Fixing steamcmd appmanifest state..."
+	@rm -f local/game/server/steamapps/appmanifest_2089300.acf
+	@echo "Done. Please run 'make local-down' and 'make local-up' or restart the container to retry the update."
+
 .PHONY: local-logs
 local-logs: ## View logs for the Icarus server
 	cd local && docker compose logs -f icarus
