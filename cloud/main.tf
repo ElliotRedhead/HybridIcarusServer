@@ -61,6 +61,7 @@ resource "null_resource" "server_setup" {
     instance_id = aws_lightsail_instance.vpn_proxy.id
     index_hash  = filemd5("${path.module}/index.html.tpl")
     caddy_hash  = filemd5("${path.module}/Caddyfile.tpl")
+    config_hash = nonsensitive(sha256(jsonencode([var.auth_token, var.frp_dashboard_creds, var.duckdns_domain, var.duckdns_token])))
   }
 
   connection {
