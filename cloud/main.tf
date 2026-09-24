@@ -111,10 +111,10 @@ resource "null_resource" "server_setup" {
 
       "sudo docker rm -f status-web frps duckdns 2>/dev/null || true",
 
-      "sudo docker run -d --name status-web --restart always --network host -v '/opt/icarus-status:/usr/share/caddy:ro' -v '/opt/caddy/Caddyfile:/etc/caddy/Caddyfile:ro' -v '/opt/caddy/data:/data' -v '/opt/caddy/config:/config' caddy:alpine",
+      "sudo docker run -d --name status-web --restart always --network host -v '/opt/icarus-status:/usr/share/caddy:ro' -v '/opt/caddy/Caddyfile:/etc/caddy/Caddyfile:ro' -v '/opt/caddy/data:/data' -v '/opt/caddy/config:/config' caddy:2-alpine",
       "sleep 3",
 
-      "sudo docker run -d --name frps --restart always --network host -v '/etc/frp/frps.toml:/etc/frp/frps.toml' snowdreamtech/frps",
+      "sudo docker run -d --name frps --restart always --network host -v '/etc/frp/frps.toml:/etc/frp/frps.toml' snowdreamtech/frps:0.70.1-debian",
       "sleep 3",
 
       "sudo docker run -d --name duckdns --restart always --network host -e SUBDOMAINS='${var.duckdns_domain}' -e TOKEN='${var.duckdns_token}' lscr.io/linuxserver/duckdns:latest",
