@@ -130,11 +130,7 @@ resource "null_resource" "server_setup" {
       if echo "$FRP_RES" | grep -q "\"status\":\"online\""; then
           GATEWAY="online"
       else
-          if ping -c 1 -W 2 "${var.duckdns_domain}.duckdns.org" >/dev/null 2>&1; then
-              GATEWAY="online"
-          else
-              GATEWAY="offline"
-          fi
+          GATEWAY="offline"
       fi
 
       # 2. Check Game Server (Steam Query Port 27015)
