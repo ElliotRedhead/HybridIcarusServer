@@ -21,6 +21,11 @@ terraform {
   }
 }
 
+locals {
+  caddy_image = "caddy:2.11.4-alpine"
+  frps_image  = "snowdreamtech/frps:0.71.0-debian"
+}
+
 provider "aws" {
   region  = var.aws_region
   profile = var.aws_profile
@@ -61,6 +66,7 @@ resource "null_resource" "server_setup" {
     instance_id = aws_lightsail_instance.gateway.id
     index_hash  = filemd5("${path.module}/index.html.tpl")
     caddy_hash  = filemd5("${path.module}/Caddyfile.tpl")
+    images      = "${local.caddy_image} ${local.frps_image}"
     config_hash = nonsensitive(sha256(jsonencode([var.auth_token, var.frp_dashboard_creds, var.duckdns_domain, var.duckdns_token])))
   }
 
@@ -111,10 +117,10 @@ resource "null_resource" "server_setup" {
 
       "sudo docker rm -f status-web frps duckdns 2>/dev/null || true",
 
-      "sudo docker run -d --name status-web --restart always --network host -v '/opt/icarus-status:/usr/share/caddy:ro' -v '/opt/caddy/Caddyfile:/etc/caddy/Caddyfile:ro' -v '/opt/caddy/data:/data' -v '/opt/caddy/config:/config' caddy:2-alpine",
+      "sudo docker run -d --name status-web --restart always --network host -v '/opt/icarus-status:/usr/share/caddy:ro' -v '/opt/caddy/Caddyfile:/etc/caddy/Caddyfile:ro' -v '/opt/caddy/data:/data' -v '/opt/caddy/config:/config' ${local.caddy_image}",
       "sleep 3",
 
-      "sudo docker run -d --name frps --restart always --network host -v '/etc/frp/frps.toml:/etc/frp/frps.toml' snowdreamtech/frps:0.70.1-debian",
+      "sudo docker run -d --name frps --restart always --network host -v '/etc/frp/frps.toml:/etc/frp/frps.toml' ${local.frps_image}",
       "sleep 3",
 
       # Point DuckDNS at the static IP (it never changes, so a one-off update is enough)
