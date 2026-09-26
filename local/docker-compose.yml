@@ -1,3 +1,5 @@
+name: icarus
+
 services:
   icarus:
     image: mornedhels/icarus-server:1.0.0
