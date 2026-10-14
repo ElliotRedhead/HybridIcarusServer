@@ -4,8 +4,14 @@ services:
   icarus:
     image: mornedhels/icarus-server:1.0.0
     container_name: icarus
-    mem_limit: ${ICARUS_MEM_LIMIT:-9g}
+    # kill only this container if it outgrows its RAM (no swap on top); measured ~4.6 GB empty (Oct 2026)
+    mem_limit: ${ICARUS_MEM_LIMIT:-7g}
+    memswap_limit: ${ICARUS_MEM_LIMIT:-7g}
+    # back after a power cut. Supervisord inside restarts the game process without the container
+    # dying, so a host watchdog with this label (crash-guard) stops it after repeated OOM kills.
     restart: unless-stopped
+    labels:
+      crash-guard: "true"
     ports:
       - "17777:17777/udp" # Game Port
       - "27015:27015/udp" # Steam Query Port
