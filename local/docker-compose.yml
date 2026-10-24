@@ -64,7 +64,7 @@ services:
     command: -c "while ! ping -c 1 -W 1 8.8.8.8 > /dev/null 2>&1; do echo 'Waiting for internet...'; sleep 2; done; /usr/bin/frpc -c /etc/frp/frpc.toml"
 
   version-server:
-    image: nginx:1.31.6-alpine
+    image: nginx:1.31.8-alpine
     container_name: icarus-version
     restart: unless-stopped
     # Serves only the game's current_version file (mounting the directory avoids a
