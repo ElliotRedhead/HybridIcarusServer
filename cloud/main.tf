@@ -23,7 +23,7 @@ terraform {
 
 locals {
   caddy_image = "caddy:2.11.4-alpine"
-  frps_image  = "snowdreamtech/frps:0.71.0-debian"
+  frps_image  = "snowdreamtech/frps:0.72.0-debian"
 }
 
 provider "aws" {

@@ -52,7 +52,7 @@ services:
         max-file: "3"
 
   frpc:
-    image: snowdreamtech/frpc:0.71.0-debian
+    image: snowdreamtech/frpc:0.72.0-debian
     container_name: frpc
     restart: unless-stopped
     volumes:
